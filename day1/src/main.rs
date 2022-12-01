@@ -26,7 +26,7 @@ fn part1(input: &Vec<String>) -> i64 {
             current += a;
         }
     }
-    return max;
+    max
 }
 
 fn part2(input: &Vec<String>) -> i64 {
@@ -44,5 +44,5 @@ fn part2(input: &Vec<String>) -> i64 {
     let a = heap.pop().unwrap();
     let b = heap.pop().unwrap();
     let c = heap.pop().unwrap();
-    return a+b+c;
+    a+b+c
 }
