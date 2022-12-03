@@ -37,6 +37,20 @@ fn part1(input: &Vec<String>) -> i32 {
 }
 
 fn part2(input: &Vec<String>) -> i32 {
-    0
+    let mut result = 0;
+    let mut counter = 0;
+    while counter < input.len()-2 {
+        let a = &input[counter];
+        let b = &input[1 + counter];
+        let c = &input[2 + counter];
+        for ch in a.chars() {
+            if b.contains(ch) && c.contains(ch) {
+                result += char_to_priority(ch);
+                break;
+            }
+        }
+        counter = counter + 3
+    }
+    result
 }
 
