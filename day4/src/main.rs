@@ -11,32 +11,52 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn contain(s1: &str, s2: &str) -> bool {
-    let n1 = s1.split("-").map(|x| x.parse::<i32>().unwrap()).collect::<Vec<i32>>();
-    let n2 = s2.split("-").map(|x| x.parse::<i32>().unwrap()).collect::<Vec<i32>>();
-    if n1[0] <= n2[0] && n1[1] >= n2[1] {
-        return true;
-    }
-    false
+struct Assignment {
+    x: i32,
+    y: i32,
 }
 
-fn overlap(s1: &str, s2: &str) -> bool {
-    let n1 = s1.split("-").map(|x| x.parse::<i32>().unwrap()).collect::<Vec<i32>>();
-    let n2 = s2.split("-").map(|x| x.parse::<i32>().unwrap()).collect::<Vec<i32>>();
-    if n1[0] <= n2[0] && n1[1] >= n2[0] {
-        return true;
+impl Assignment {
+    fn new(x: &str, y: &str) -> Assignment {
+        Assignment {
+            x: x.parse::<i32>().unwrap(),
+            y: y.parse::<i32>().unwrap(),
+        }
     }
-    if n2[0] <= n1[0] && n2[1] >= n1[0] {
-        return true;
+}
+
+trait Contains {
+    fn contains(&self, other: &Assignment) -> bool;
+}
+
+trait Overlaps {
+    fn overlaps(&self, other: &Assignment) -> bool;
+}
+
+impl Contains for Assignment {
+    fn contains(&self, other: &Assignment) -> bool {
+        self.x <= other.x && self.y >= other.y
     }
-    false
+}
+
+impl Overlaps for Assignment {
+    fn overlaps(&self, other: &Assignment) -> bool {
+        self.x <= other.x && self.y >= other.x || other.x <= self.x && other.y >= self.x
+    }
 }
 
 fn part1(input: &Vec<String>) -> i32 {
     let mut result = 0;
     for l in input {
-        let mut parts = l.split(",").collect::<Vec<&str>>();
-        if contain(parts[0],parts[1]) || contain(parts[1], parts[0]) {
+        let parts = l
+            .split(",")
+            .map(|e| {
+                let is = e.split("-").collect::<Vec<&str>>();
+                Assignment::new(is[0], is[1])
+            })
+            .collect::<Vec<Assignment>>();
+
+        if parts[0].contains(&parts[1]) || parts[1].contains(&parts[0]) {
             result += 1;
         }
     }
@@ -46,9 +66,15 @@ fn part1(input: &Vec<String>) -> i32 {
 fn part2(input: &Vec<String>) -> i32 {
     let mut result = 0;
     for l in input {
-        let mut parts = l.split(",").collect::<Vec<&str>>();
-        if overlap(parts[0],parts[1]) || overlap(parts[1], parts[0]) {
-            println!("{} contains {}", parts[0], parts[1]);
+        let parts = l
+            .split(",")
+            .map(|e| {
+                let is = e.split("-").collect::<Vec<&str>>();
+                Assignment::new(is[0], is[1])
+            })
+            .collect::<Vec<Assignment>>();
+
+        if parts[0].overlaps(&parts[1]) {
             result += 1;
         }
     }
