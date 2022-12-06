@@ -87,7 +87,6 @@ fn part1(input: &Vec<String>) -> String {
         for i in 0..amount {
             let element = stacks[from-1].pop().unwrap();
             stacks[to-1].push(element);
-            
         }
     }
     println!("Stacks finished:\n {:?}", stacks);
@@ -98,6 +97,35 @@ fn part1(input: &Vec<String>) -> String {
     result
 }
 
-fn part2(input: &Vec<String>) -> i32 {
-    0
+fn part2(input: &Vec<String>) -> String {
+    let number_of_stacks = max(&input[HEIGHT_SUPREMUM]
+        .replace(" ", "")
+        .split("")
+        .map(|x| {
+            if x != "" { return x.parse::<i32>().unwrap(); } else { return 0; } 
+        })
+        .collect::<Vec<i32>>());
+    let mut stacks = vec![Vec::<char>::with_capacity(HEIGHT_SUPREMUM as usize); number_of_stacks as usize];
+    parse_start(input, &mut stacks);
+    println!("Stacks start:\n {:?}", stacks);
+    for (count, line) in input.iter().enumerate() {
+        if count <= HEIGHT_SUPREMUM + 1{
+            continue;
+        }
+        let (amount, from, to) = parse_line(line);
+        let mut elements = Vec::<char>::new();
+        for i in 0..amount {
+            elements.push(stacks[from-1].pop().unwrap());
+        }
+        for element in elements.iter().rev() {
+            stacks[to-1].push(*element);
+        }
+    }
+    println!("Stacks finished:\n {:?}", stacks);
+    let mut result = "".to_string();
+    for i in 0..stacks.len() {
+        result.push(stacks[i].pop().unwrap());
+    }
+    result
 }
+
