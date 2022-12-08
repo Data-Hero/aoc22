@@ -1,4 +1,3 @@
-use std::fmt;
 use std::fs::File;
 use std::io::{self, prelude::*, BufReader};
 
@@ -17,12 +16,6 @@ struct Tree {
     y: u16,
     height: i8,
     mark: bool,
-}
-
-impl fmt::Debug for Tree {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Tree").field("mark", &self.mark).finish()
-    }
 }
 
 fn part1(input: &Vec<String>) -> u64 {
