@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, prelude::*, BufReader};
 
@@ -11,10 +12,89 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn part1(input: &Vec<String>) -> i64 {
-    0
+fn signum(a: i64) -> i64 {
+    if a > 0 {
+        1i64
+    } else if a < 0 {
+        -1i64
+    } else {
+        0i64
+    }
 }
 
-fn part2(input: &Vec<String>) -> i64 {
+struct KnotPosition {
+    x: i64,
+    y: i64,
+}
+
+impl KnotPosition {
+    fn step(&mut self, direction: &str) {
+        match direction {
+            "D" => self.y -= 1i64,
+            "U" => self.y += 1i64,
+            "L" => self.x -= 1i64,
+            "R" => self.x += 1i64,
+            _ => panic!("Unknown direction: {}", direction),
+        }
+    }
+    fn to(&mut self, second: &KnotPosition) -> bool {
+        if self.inf_dist(second) != 2i64 {
+            return false;
+        }
+        if self.x + 2 == second.x {
+            self.x += 1i64;
+            self.y += signum(second.y - self.y);
+            return true;
+        }
+        if self.x - 2 == second.x {
+            self.x -= 1i64;
+            self.y += signum(second.y - self.y);
+            return true;
+        }
+        if self.y + 2 == second.y {
+            self.y += 1i64;
+            self.x += signum(second.x - self.x);
+            return true;
+        }
+        if self.y - 2 == second.y {
+            self.y -= 1i64;
+            self.x += signum(second.x - self.x);
+            return true;
+        }
+        false
+    }
+    fn inf_dist(&self, second: &KnotPosition) -> i64 {
+        (self.x - second.x).abs().max((self.y - second.y).abs())
+    }
+    fn m_dist(&self, second: &KnotPosition) -> i64 {
+        (self.x - second.x).abs() + (self.y - second.y).abs()
+    }
+}
+
+fn part1(input: &Vec<String>) -> usize {
+
+    let mut tail = KnotPosition { x: 200, y: 200 };
+    let mut head = KnotPosition { x: 200, y: 200 };
+    let mut map = HashMap::<i64, bool>::new();
+    for (i,line) in input.iter().enumerate() {
+        let step = line.split_whitespace().collect::<Vec<&str>>();
+        let direction = step[0];
+        let distance = step[1].parse::<u64>().unwrap();
+        println!("{} {}", direction, distance);
+        let mut c = 0u64;
+        while c < distance {
+            head.step(direction);
+            let moved = tail.to(&head);
+            if moved {
+                println!("x: {} y: {} \t head x: {} y: {}", tail.x, tail.y, head.x, head.y);
+                map.insert(1000 * tail.x + tail.y, true);
+            } 
+            c += 1;
+        }
+    }
+    map.keys().len()
+}
+
+fn part2(input: &Vec<String>) -> u64 {
     0
 }
