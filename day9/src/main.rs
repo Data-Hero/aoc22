@@ -22,6 +22,7 @@ fn signum(a: i64) -> i64 {
     }
 }
 
+#[derive(Copy, Clone)]
 struct KnotPosition {
     x: i64,
     y: i64,
@@ -72,21 +73,18 @@ impl KnotPosition {
 }
 
 fn part1(input: &Vec<String>) -> usize {
-
-    let mut tail = KnotPosition { x: 200, y: 200 };
-    let mut head = KnotPosition { x: 200, y: 200 };
+    let mut tail = KnotPosition { x: 300, y: 300 };
+    let mut head = KnotPosition { x: 300, y: 300 };
     let mut map = HashMap::<i64, bool>::new();
-    for (i,line) in input.iter().enumerate() {
+    for line in input {
         let step = line.split_whitespace().collect::<Vec<&str>>();
         let direction = step[0];
         let distance = step[1].parse::<u64>().unwrap();
-        println!("{} {}", direction, distance);
         let mut c = 0u64;
         while c < distance {
             head.step(direction);
             let moved = tail.to(&head);
             if moved {
-                println!("x: {} y: {} \t head x: {} y: {}", tail.x, tail.y, head.x, head.y);
                 map.insert(1000 * tail.x + tail.y, true);
             } 
             c += 1;
@@ -95,6 +93,29 @@ fn part1(input: &Vec<String>) -> usize {
     map.keys().len()
 }
 
-fn part2(input: &Vec<String>) -> u64 {
-    0
+fn part2(input: &Vec<String>) -> usize {
+    let mut knots = [KnotPosition { x: 300, y: 300 }; 10];
+    let mut map = HashMap::<i64, bool>::new();
+    for line in input {
+        let step = line.split_whitespace().collect::<Vec<&str>>();
+        let direction = step[0];
+        let distance = step[1].parse::<u64>().unwrap();
+        let mut c = 0u64;
+        while c < distance {
+            knots[0].step(direction);
+            for j in 1..10 {
+                let mut next = knots[j];
+                let last = knots[j - 1];
+                let moved = next.to(&last);
+                if moved {
+                    knots[j] = next;
+                    if j == 9 {
+                        map.insert(1000 * next.x + next.y, true);
+                    }
+                } 
+            }
+            c += 1;
+        }
+    }
+    map.keys().len()
 }
