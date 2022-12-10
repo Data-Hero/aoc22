@@ -27,8 +27,7 @@ fn part1(input: &Vec<Option<i64>>) -> i64 {
     let mut x = 1i64;
     for (index, value) in input.iter().enumerate() {
         if (index + 21) % 40 == 0 {
-            println!("{} * {} = {}",x , index + 1 , (x * (index+1)as i64));
-            result += (x * (index + 1) as i64);
+            result += x * (index + 1) as i64;
         }
         x += match value {
             Some(value) => value,
@@ -38,6 +37,30 @@ fn part1(input: &Vec<Option<i64>>) -> i64 {
     result
 }
 
-fn part2(input: &Vec<Option<i64>>) -> i64 {
-    0
+fn part2(input: &Vec<Option<i64>>) -> String {
+    let mut drawing = [['.'; 40]; 6];
+    let mut x = 1i64;
+    for (index, value) in input.iter().enumerate() {
+        drawing[index / 40][index % 40] = {
+            if (index % 40) + 1 >= x as usize && (index % 40) <= x as usize + 1 || index % 40 == 0 {
+                '#'
+            } else {
+                '.'
+            }
+        };
+
+        x += match value {
+            Some(value) => value,
+            None => &0i64,
+        };
+    }
+
+    let mut result = "\n".to_string();
+    for pixel in drawing {
+        for value in pixel {
+            result.push(value);
+        }
+        result.push('\n');
+    }
+    result
 }
