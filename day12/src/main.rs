@@ -20,14 +20,49 @@ struct Node {
     height: i16,
 }
 
+enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+fn is_traversable(direction: Direction, x: usize, y: usize, input: &Vec<String>, nodes: &HashMap<(u8,u8), NodeIndex>, graph: &Graph<Node, i16, Directed>, cn: &NodeIndex) -> bool {
+    let max_x = input[0].len();
+    let max_y = input.len();
+    return match direction {
+        Direction::Left => x > 0 && graph
+                    .node_weight(*nodes.get(&(x as u8 - 1, y as u8)).unwrap())
+                    .unwrap()
+                    .height
+                    - graph.node_weight(*cn).unwrap().height
+                    <= 1,
+        Direction::Right => x + 1 < max_x && graph
+                    .node_weight(*nodes.get(&(x as u8 + 1, y as u8)).unwrap())
+                    .unwrap()
+                    .height
+                    - graph.node_weight(*cn).unwrap().height
+                    <= 1,
+        Direction::Up => y > 0 && graph
+                    .node_weight(*nodes.get(&(x as u8, y as u8 - 1)).unwrap())
+                    .unwrap()
+                    .height
+                    - graph.node_weight(*cn).unwrap().height
+                    <= 1,
+        Direction::Down => y + 1 < max_y && graph
+                    .node_weight(*nodes.get(&(x as u8, y as u8 + 1)).unwrap())
+                    .unwrap()
+                    .height
+                    - graph.node_weight(*cn).unwrap().height
+                    <= 1,
+    };
+}
 
 fn part1(input: &Vec<String>) -> i64 {
     let mut graph: Graph<Node, i16, Directed> = Graph::new();
     let mut nodes: HashMap<(u8, u8), NodeIndex> = HashMap::new();
     let mut start: NodeIndex = NodeIndex::new(0);
     let mut goal: NodeIndex = NodeIndex::new(0);
-    let input_length = input.len();
-    let line_length = input[0].len();
 
     for (li, line) in input.iter().enumerate() {
         for (bi, byte) in line.as_bytes().iter().enumerate() {
@@ -41,7 +76,6 @@ fn part1(input: &Vec<String>) -> i64 {
             });
             nodes.insert((bi as u8, li as u8), node_id);
             if *byte as char == 'S' {
-                println!("Start: {:?}, x: {}, y: {}", graph.node_weight(node_id).unwrap(), bi, li);
                 start = node_id;
             }
             if *byte as char == 'E' {
@@ -52,50 +86,18 @@ fn part1(input: &Vec<String>) -> i64 {
 
     for (li, line) in input.iter().enumerate() {
         for (bi, _) in line.as_bytes().iter().enumerate() {
-            let a = *nodes.get(&(bi as u8, li as u8)).unwrap();
-            if li > 0 {
-                if graph
-                    .node_weight(*nodes.get(&(bi as u8, li as u8 - 1)).unwrap())
-                    .unwrap()
-                    .height
-                    - graph.node_weight(a).unwrap().height
-                    <= 1
-                {
-                    graph.add_edge(a, *nodes.get(&(bi as u8, li as u8 - 1)).unwrap(), 1);
-                }
+            let cn = *nodes.get(&(bi as u8, li as u8)).unwrap();
+            if is_traversable(Direction::Up, bi, li, input, &nodes, &graph, &cn) {
+                graph.add_edge(cn, *nodes.get(&(bi as u8, li as u8 - 1)).unwrap(), 1);
             }
-            if li + 1 < input_length {
-                if graph
-                    .node_weight(*nodes.get(&(bi as u8, li as u8 + 1)).unwrap())
-                    .unwrap()
-                    .height
-                    - graph.node_weight(a).unwrap().height
-                    <= 1
-                {
-                    graph.add_edge(a, *nodes.get(&(bi as u8, li as u8 + 1)).unwrap(), 1);
-                }
+            if is_traversable(Direction::Down, bi, li, input, &nodes, &graph, &cn) {
+                graph.add_edge(cn, *nodes.get(&(bi as u8, li as u8 + 1)).unwrap(), 1);
             }
-            if bi > 0 {
-                if graph
-                    .node_weight(*nodes.get(&(bi as u8 - 1, li as u8)).unwrap())
-                    .unwrap()
-                    .height
-                    - graph.node_weight(a).unwrap().height
-                    <= 1
-                {
-                    graph.add_edge(a, *nodes.get(&(bi as u8 - 1, li as u8)).unwrap(), 1);
-                }
+            if is_traversable(Direction::Left, bi, li, input, &nodes, &graph, &cn) {
+                graph.add_edge(cn, *nodes.get(&(bi as u8 - 1, li as u8)).unwrap(), 1);
             }
-            if bi + 1 < line_length {
-                if graph
-                    .node_weight(*nodes.get(&(bi as u8 + 1, li as u8)).unwrap())
-                    .unwrap()
-                    .height
-                    - graph.node_weight(a).unwrap().height
-                    <= 1
-                {
-                    graph.add_edge(a, *nodes.get(&(bi as u8 + 1, li as u8)).unwrap(), 1);
-                }
+            if is_traversable(Direction::Right, bi, li, input, &nodes, &graph, &cn) {
+                graph.add_edge(cn, *nodes.get(&(bi as u8 + 1, li as u8)).unwrap(), 1);
             }
         }
     }
