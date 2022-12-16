@@ -1,13 +1,12 @@
+use itertools::{EitherOrBoth::*, Itertools};
+use std::cmp::Ordering;
 use std::fs::File;
 use std::io::{self, prelude::*, BufReader};
-
-use itertools::{Itertools, EitherOrBoth::*};
 
 fn main() -> io::Result<()> {
     let file = File::open("input")?;
     let reader = BufReader::new(file);
     let mut input = reader.lines().map(|l| l.unwrap()).collect::<Vec<String>>();
-    println!("Input: {:?}", input);
     println!("Part 1: {}", part1(&mut input));
     println!("Part 2: {}", part2(&mut input));
     Ok(())
@@ -19,12 +18,61 @@ enum Token {
     List(Vec<Token>),
 }
 
-#[derive(Debug, PartialEq)]
-enum HT {
-    F,
-    NF,
-    T,
+impl PartialEq for Token {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Token::Number(a), Token::Number(b)) => a == b,
+            (Token::List(a), Token::List(b)) => a == b,
+            _ => false,
+        }
+    }
 }
+
+impl PartialOrd for Token {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Token {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        let a = self.clone();
+        let b = other.clone();
+        match (a, b) {
+            (Token::Number(a), Token::Number(b)) => {
+                if a < b {
+                    return Ordering::Less;
+                } else if a > b {
+                    return Ordering::Greater;
+                } else {
+                    return Ordering::Equal;
+                }
+            }
+            (Token::Number(a), Token::List(b)) => {
+                return Token::List(vec![Token::Number(a.clone())]).cmp(&mut Token::List(b.clone()))
+            }
+            (Token::List(a), Token::Number(b)) => {
+                return Token::List(a.clone()).cmp(&mut Token::List(vec![Token::Number(b.clone())]))
+            }
+            (Token::List(a), Token::List(b)) => {
+                for pair in a.iter().zip_longest(b.iter()) {
+                    match pair {
+                        Both(l, r) => if l != r { return l.cmp(r); },
+                        Left(_l) => {
+                            return Ordering::Greater;
+                        }
+                        Right(_r) => {
+                            return Ordering::Less;
+                        }
+                    }
+                }
+                return Ordering::Equal;
+            }
+        }
+    }
+}
+
+impl Eq for Token {}
 
 fn lex(line: &mut String) -> Vec<Token> {
     let mut tokens: Vec<Token> = Vec::<Token>::new();
@@ -52,69 +100,34 @@ fn lex(line: &mut String) -> Vec<Token> {
     tokens
 }
 
-fn compare(a: &mut Token, b: &mut Token) -> HT {
-    match (a, b) {
-        (Token::Number(a), Token::Number(b)) => {
-            if a < b {
-                return HT::T;
-            } else if a > b {
-                return HT::F;
-            } else {
-                return HT::NF;
-            }
-        }
-        (Token::Number(a), Token::List(b)) => {
-            return compare(
-                &mut Token::List(vec![Token::Number(a.clone())]),
-                &mut Token::List(b.clone()),
-            )
-        }
-        (Token::List(a), Token::Number(b)) => {
-            return compare(
-                &mut Token::List(a.clone()),
-                &mut Token::List(vec![Token::Number(b.clone())]),
-            )
-        }
-        (Token::List(a), Token::List(b)) => {
-            for pair in a.iter().zip_longest(b.iter()) {
-                match pair {
-                    Both(l, r) => match compare(&mut l.clone(), &mut r.clone()) {
-                        HT::T => return HT::T,
-                        HT::F => return HT::F,
-                        HT::NF => {}
-                    },
-                    Left(_l) => {
-                        return HT::F;
-                    }
-                    Right(_r) => {
-                        return HT::T;
-                    }
-                }
-            }
-            return HT::NF;
-        }
-    }
-}
-
 fn part1(input: &mut Vec<String>) -> usize {
     let mut result = 0;
     let mut count = 0;
     for index in (0..input.len() - 1).step_by(3) {
         count += 1;
-        let mut l1 = lex(&mut input[index]);
-        let mut l2 = lex(&mut input[index + 1]);
+        let l1 = lex(&mut input[index].clone());
+        let l2 = lex(&mut input[index + 1].clone());
         if l1.is_empty() {
             break;
         }
-
-        let a = compare(&mut l1[0], &mut l2[0]);
-        if l2.is_empty() || a == HT::T {
+        if l2.is_empty() || l1 <= l2 {
             result += count;
         }
     }
     result
 }
 
-fn part2(input: &Vec<String>) -> usize {
-    0
+fn part2(input: &mut Vec<String>) -> usize {
+    let dp1 = Token::List(vec![Token::List(vec![Token::Number(2)])]);
+    let dp2 = Token::List(vec![Token::List(vec![Token::Number(6)])]);
+    let mut lines = vec![dp1.clone(), dp2.clone()];
+    for line in input {
+        let l = lex(&mut line.clone());
+        if l.is_empty() {
+            continue;
+        }
+        lines.push(Token::List(l));
+    }
+    lines.sort();
+    (lines.iter().position(|l| l == &dp1).unwrap() + 1) * (lines.iter().position(|l| l == &dp2).unwrap() + 1)
 }
